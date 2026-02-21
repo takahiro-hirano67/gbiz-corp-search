@@ -1,12 +1,14 @@
+# api/gbiz/endpoints.py
+
 from api.gbiz.keymap import get_keymaps
 
-
+# エンドポイントリスト（処理用の情報も持たせる）
 def get_endpoints() -> list[dict]:
     keymaps = get_keymaps()
 
     return [
         {
-            "endpoint": "",
+            "endpoint": "", # 末尾なし/明示的に空文字列として定義
             "label_en": "basic",
             "label_ja": "法人基本情報",
             "convert_map": keymaps["basic_map"],

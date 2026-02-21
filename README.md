@@ -3,23 +3,25 @@
 gBizINFO API から法人情報を取得し、日本語 Markdown として出力するWebアプリです。  
 取得した情報を LLM に渡すことで、企業分析への活用を目的としています。
 
+[アプリへのリンク（Vercel）](https://gbiz-corp-search.vercel.app/)
+
 ## 概要
 
 企業名を入力すると、gBizINFO API の複数エンドポイントから情報を取得し、読みやすい日本語 Markdown 形式で表示します。出力結果はコピーまたはファイルダウンロードが可能です。
 
 **取得できる情報**
 
-| カテゴリ | 内容 |
-|----------|------|
-| 法人基本情報 | 法人名・所在地・従業員数・代表者名・資本金 等 |
-| 財務情報 | 売上高・純利益・総資産・大株主 等 |
-| 特許情報 | 特許・意匠・商標の登録情報 |
-| 補助金情報 | 補助金交付の実績 |
-| 調達情報 | 政府調達の受注実績 |
-| 届出・認定情報 | 各府省による認定・届出 |
-| 表彰情報 | 各府省による表彰実績 |
-| 事業所情報 | 事業所名・所在地 等 |
-| 職場情報 | 平均年齢・育児休業取得率・女性活躍推進情報 等 |
+| カテゴリ       | 内容                                          |
+| -------------- | --------------------------------------------- |
+| 法人基本情報   | 法人名・所在地・従業員数・代表者名・資本金 等 |
+| 財務情報       | 売上高・純利益・総資産・大株主 等             |
+| 特許情報       | 特許・意匠・商標の登録情報                    |
+| 補助金情報     | 補助金交付の実績                              |
+| 調達情報       | 政府調達の受注実績                            |
+| 届出・認定情報 | 各府省による認定・届出                        |
+| 表彰情報       | 各府省による表彰実績                          |
+| 事業所情報     | 事業所名・所在地 等                           |
+| 職場情報       | 平均年齢・育児休業取得率・女性活躍推進情報 等 |
 
 ## 実装のポイント
 
@@ -39,14 +41,20 @@ basic_map = {
 }
 ```
 
+### 最新バージョンに対応
+
+2026年1月26日にリニューアルしたAPIの仕様に対応しています。
+
+REST API （v1）--> REST API （v2）
+
 ## 技術スタック
 
-| レイヤー | 技術 |
-|----------|------|
+| レイヤー       | 技術                                                |
+| -------------- | --------------------------------------------------- |
 | フロントエンド | Next.js 16 (App Router) / TypeScript / Tailwind CSS |
-| バックエンド | FastAPI / Python |
-| Markdown 表示 | react-markdown |
-| デプロイ | Vercel（単一プロジェクト） |
+| バックエンド   | FastAPI / Python                                    |
+| Markdown 表示  | react-markdown                                      |
+| デプロイ       | Vercel（単一プロジェクト）                          |
 
 ## ディレクトリ構成
 
@@ -113,3 +121,40 @@ npm run dev
 - [gBizINFO 経済産業省](https://info.gbiz.go.jp/hojin/Top)
 - [gBizINFO API](https://content.info.gbiz.go.jp/api/index.html)
 - [国税庁 法人番号公表サイト](https://www.houjin-bangou.nta.go.jp/)
+
+## ディレクトリ構造
+
+```
+gbiz-corp-search
+├─ api
+│  ├─ gbiz
+│  │  ├─ endpoints.py
+│  │  ├─ formatter.py
+│  │  ├─ keymap.py
+│  │  └─ __init__.py
+│  └─ index.py
+├─ app
+│  ├─ favicon.ico
+│  ├─ globals.css
+│  ├─ layout.tsx
+│  └─ page.tsx
+├─ eslint.config.mjs
+├─ next.config.ts
+├─ package-lock.json
+├─ package.json
+├─ postcss.config.mjs
+├─ public
+│  ├─ file.svg
+│  ├─ globe.svg
+│  ├─ next.svg
+│  ├─ vercel.svg
+│  └─ window.svg
+├─ README.md
+├─ repomix-output.xml
+├─ requirements.txt
+├─ styles
+│  └─ markdown_style.css
+├─ tailwind.config.js
+└─ tsconfig.json
+
+```
