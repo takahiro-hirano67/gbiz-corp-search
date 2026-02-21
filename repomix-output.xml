@@ -58,11 +58,6 @@ eslint.config.mjs
 next.config.ts
 package.json
 postcss.config.mjs
-public/file.svg
-public/globe.svg
-public/next.svg
-public/vercel.svg
-public/window.svg
 README.md
 requirements.txt
 styles/markdown_style.css
@@ -73,6 +68,19 @@ types/index.ts
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path=".env.local.example">
+# gBizINFO API トークン
+GBIZ_API_TOKEN=your_token_here
+
+# 設定方法
+# cp .env.local.example .env.local
+# .env.local に GBIZ_API_TOKEN=実際のトークン を記入
+</file>
+
+<file path="api/gbiz/__init__.py">
+
+</file>
 
 <file path="components/CandidateList.tsx">
 // components/CandidateList.tsx
@@ -282,6 +290,37 @@ export default function SearchForm({
 }
 </file>
 
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+</file>
+
 <file path="styles/markdown_style.css">
 /* styles/markdown_style.css */
 
@@ -351,6 +390,43 @@ export default function SearchForm({
 }
 </file>
 
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
+</file>
+
 <file path="types/index.ts">
 // types/index.ts
 
@@ -378,17 +454,264 @@ export type SearchResponse = {
 };
 </file>
 
-<file path=".env.local.example">
-# gBizINFO API トークン
-GBIZ_API_TOKEN=your_token_here
+<file path=".gitignore">
+# ==================================================
+# Next.js
+# ==================================================
 
-# 設定方法
-# cp .env.local.example .env.local
-# .env.local に GBIZ_API_TOKEN=実際のトークン を記入
-</file>
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-<file path="api/gbiz/__init__.py">
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env
+.env.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# ==================================================
+# Python
+# ==================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[codz]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# UV
+#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#uv.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+#poetry.toml
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#   pdm recommends including project-wide configuration in pdm.toml, but excluding .pdm-python.
+#   https://pdm-project.org/en/latest/usage/project/#working-with-version-control
+#pdm.lock
+#pdm.toml
+.pdm-python
+.pdm-build/
+
+# pixi
+#   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
+#pixi.lock
+#   Pixi creates a virtual environment in the .pixi directory, just like venv module creates one
+#   in the .venv directory. It is recommended not to include this directory in version control.
+.pixi
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+#  and can be added to the global gitignore or merged into this file.  For a more nuclear
+#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
+#.idea/
+
+# Abstra
+# Abstra is an AI-powered process automation framework.
+# Ignore directories containing user credentials, local state, and settings.
+# Learn more at https://abstra.io/docs
+.abstra/
+
+# Visual Studio Code
+#  Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
+#  that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
+#  and can be added to the global gitignore or merged into this file. However, if you prefer, 
+#  you could uncomment the following to ignore the entire vscode folder
+# .vscode/
+
+# Ruff stuff:
+.ruff_cache/
+
+# PyPI configuration file
+.pypirc
+
+# Cursor
+#  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
+#  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
+#  refer to https://docs.cursor.com/context/ignore-files
+.cursorignore
+.cursorindexingignore
+
+# Marimo
+marimo/_static/
+marimo/_lsp/
+__marimo__/
 </file>
 
 <file path="api/gbiz/endpoints.py">
@@ -494,8 +817,8 @@ def translate_keys(data: Any, mapping: dict) -> Any:
 def to_markdown(data: Any, level: int = 0) -> str:
     """辞書/リストをMarkdownに変換する関数"""
 
-    # 階層レベルごとにインデント（半角スペース2つ）を増やす
-    indent = "  " * level
+    # 階層レベルごとにインデント（半角スペース4つ）を増やす
+    indent = "    " * level
     # Markdown
     md = ""
 
@@ -588,6 +911,10 @@ def build_full_markdown(
 - また、APIにデータが反映されるのにも時差が発生します。
 - 存在しないデータを根拠に判断せず、あくまで確認できる範囲を判断材料としてください。
 """
+
+# 補足の箇所の意図: LLMへの文脈用
+# データが空だった際に「活動していない」のようなネガティブな評価をさせないため。
+# gBizINFOに登録されていないだけで、実態とは異なる可能性があるため、空データを根拠に推測するのはNG
 </file>
 
 <file path="api/gbiz/keymap.py">
@@ -863,57 +1190,6 @@ def get_keymaps() -> dict:
     }
 </file>
 
-<file path="eslint.config.mjs">
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
-</file>
-
-<file path="postcss.config.mjs">
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
-};
-
-export default config;
-</file>
-
-<file path="public/file.svg">
-<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
-</file>
-
-<file path="public/globe.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
-</file>
-
-<file path="public/next.svg">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
-</file>
-
-<file path="public/vercel.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
-</file>
-
-<file path="public/window.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
-</file>
-
 <file path="requirements.txt">
 fastapi==0.129.0
 uvicorn[standard]==0.41.0
@@ -934,509 +1210,6 @@ export default {
     },
     plugins: [],
 };
-</file>
-
-<file path="tsconfig.json">
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": ["node_modules"]
-}
-</file>
-
-<file path=".gitignore">
-# ==================================================
-# Next.js
-# ==================================================
-
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env
-.env.local
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# ==================================================
-# Python
-# ==================================================
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[codz]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py.cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
-
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
-
-# UV
-#   Similar to Pipfile.lock, it is generally recommended to include uv.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#uv.lock
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
-#poetry.toml
-
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#   pdm recommends including project-wide configuration in pdm.toml, but excluding .pdm-python.
-#   https://pdm-project.org/en/latest/usage/project/#working-with-version-control
-#pdm.lock
-#pdm.toml
-.pdm-python
-.pdm-build/
-
-# pixi
-#   Similar to Pipfile.lock, it is generally recommended to include pixi.lock in version control.
-#pixi.lock
-#   Pixi creates a virtual environment in the .pixi directory, just like venv module creates one
-#   in the .venv directory. It is recommended not to include this directory in version control.
-.pixi
-
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.envrc
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
-
-# Abstra
-# Abstra is an AI-powered process automation framework.
-# Ignore directories containing user credentials, local state, and settings.
-# Learn more at https://abstra.io/docs
-.abstra/
-
-# Visual Studio Code
-#  Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
-#  that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#  and can be added to the global gitignore or merged into this file. However, if you prefer, 
-#  you could uncomment the following to ignore the entire vscode folder
-# .vscode/
-
-# Ruff stuff:
-.ruff_cache/
-
-# PyPI configuration file
-.pypirc
-
-# Cursor
-#  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
-#  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
-#  refer to https://docs.cursor.com/context/ignore-files
-.cursorignore
-.cursorindexingignore
-
-# Marimo
-marimo/_static/
-marimo/_lsp/
-__marimo__/
-</file>
-
-<file path="api/index.py">
-# api/index.py
-
-import asyncio
-
-import httpx
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings
-
-from api.gbiz.endpoints import get_endpoints
-from api.gbiz.formatter import build_full_markdown, format_section
-
-# ---------- APIキー取得 ----------
-
-
-class Settings(BaseSettings):
-    GBIZ_API_TOKEN: str
-
-    class Config:
-        env_file = ".env.local"
-
-
-settings = Settings()
-
-# ---------- アプリケーションのセットアップ ----------
-
-app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
-
-# CORS設定
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["POST", "GET"],
-    allow_headers=["*"],
-)
-
-# gBizINFO APIのベースURL
-GBIZ_BASE_URL = "https://api.info.gbiz.go.jp/hojin/v2/hojin"
-
-
-# ヘッダー定義
-def _get_headers() -> dict:
-    token = settings.GBIZ_API_TOKEN
-    if not token:
-        raise HTTPException(
-            status_code=500, detail="GBIZ_API_TOKEN が設定されていません"
-        )
-    return {
-        "accept": "application/json",
-        "X-hojinInfo-api-token": token,
-    }
-
-
-# ---------- リクエスト/レスポンス スキーマ ----------
-
-
-class SearchRequest(BaseModel):
-    corp_name: str
-
-
-class Candidate(BaseModel):
-    name: str
-    location: str
-    corporate_number: str
-
-
-class SearchResponse(BaseModel):
-    status: str  # "success" | "multiple" | "not_found"
-    # successのとき
-    markdown: str | None = None
-    corporate_number: str | None = None
-    corp_name: str | None = None
-    corp_location: str | None = None
-    url: str | None = None
-    # multipleのとき
-    message: str | None = None
-    candidates: list[Candidate] | None = None
-
-
-# ---------- エンドポイント ----------
-
-
-# 動作チェック
-@app.get("/api/py/healthcheck")
-async def healthcheck():
-    return {"status": "ok"}
-
-
-# 検索実行
-@app.post("/api/py/search/corp", response_model=SearchResponse)
-async def search_corp(req: SearchRequest) -> SearchResponse:
-    headers = _get_headers()
-    corp_name = req.corp_name.strip()
-
-    if not corp_name:
-        raise HTTPException(status_code=400, detail="corp_name は必須です")
-
-    # セッションを再利用してパフォーマンスを向上させる
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        # --- 法人検索（法人番号を取得するため） ---
-        resp = await client.get(
-            url=f"{GBIZ_BASE_URL}?name={corp_name}&exist_flg=true&page=1&limit=100&metadata_flg=false",
-            headers=headers,
-        )
-
-        # 見つからなかった場合
-        if resp.status_code == 404:
-            return SearchResponse(
-                status="not_found",
-                message=f"「{corp_name}」は見つかりませんでした。",
-            )
-
-        # 404以外のエラー（共通）
-        if resp.status_code != 200:
-            raise HTTPException(
-                status_code=resp.status_code,
-                detail=f"gBizINFO APIエラー: {resp.json().get('message', '不明なエラー')}",
-            )
-
-        body = resp.json()
-        hojin_infos: list[dict] = body.get("hojin-infos", [])
-
-        # --- 企業を1件に特定できたか判定 ---
-        if len(hojin_infos) == 0:
-            return SearchResponse(
-                status="not_found",
-                message=f"「{corp_name}」は見つかりませんでした。",
-            )
-
-        # 特定できなかった場合、[企業名, 所在地, 法人番号]の一覧を返す
-        if len(hojin_infos) > 1:
-            candidates = [
-                Candidate(
-                    name=h.get("name", ""),
-                    location=h.get("location", ""),
-                    corporate_number=h.get("corporate_number", ""),
-                )
-                for h in hojin_infos
-            ]
-            return SearchResponse(
-                status="multiple",
-                message=f"「{corp_name}」で{len(hojin_infos)}件見つかりました。対象の企業を選択してください。",
-                candidates=candidates,
-            )
-
-        # --- 法人番号取得 ---
-        hojin_info = hojin_infos[0]
-        corp_num: str = hojin_info["corporate_number"]
-        resolved_name: str = hojin_info.get("name", corp_name)
-        corp_location: str = hojin_info.get("location", "")
-
-        # --- 法人番号を基に、各エンドポイントを並行で取得 ---
-        endpoints = get_endpoints()
-        # 並行処理後の順序を保つための配列を準備
-        sections: list[str] = [""] * len(endpoints)
-
-        # APIサーバーへの負荷を考慮し、同時接続数を3に制限
-        sem = asyncio.Semaphore(3)
-
-        async def fetch_endpoint(index: int, item: dict):
-            endpoint_path = item["endpoint"]
-            async with sem:
-                try:
-                    ep_resp = await client.get(
-                        url=f"{GBIZ_BASE_URL}/{corp_num}{endpoint_path}?metadata_flg=false",
-                        headers=headers,
-                    )
-                    ep_body = (
-                        ep_resp.json()
-                        if ep_resp.status_code == 200
-                        else {"hojin-infos": []}
-                    )
-                except Exception:
-                    # 通信エラー時は空のデータを渡してフォールバック
-                    ep_body = {"hojin-infos": []}
-
-                # 整形結果を正しいインデックスに格納
-                sections[index] = format_section(ep_body, item)
-                # 次のリクエストとの間隔をわずかに空ける（負荷軽減用）
-                await asyncio.sleep(0.1)
-
-        # 全エンドポイントのタスクを生成して一斉に実行
-        tasks = [fetch_endpoint(i, item) for i, item in enumerate(endpoints)]
-        await asyncio.gather(*tasks)
-
-    # --- 出力テキスト整形 ---
-    markdown = build_full_markdown(
-        corp_name=resolved_name,
-        corp_num=corp_num,
-        corp_location=corp_location,
-        sections=sections,
-    )
-    gbiz_url = f"https://info.gbiz.go.jp/hojin/ichiran?hojinBango={corp_num}"
-
-    return SearchResponse(
-        status="success",
-        markdown=markdown,
-        corporate_number=corp_num,
-        corp_name=resolved_name,
-        corp_location=corp_location,
-        url=gbiz_url,
-    )
 </file>
 
 <file path="app/globals.css">
@@ -1670,6 +1443,30 @@ export default function CorporateSearchPage() {
 }
 </file>
 
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+    rewrites: async () => {
+        return [
+            {
+                source: "/api/py/:path*",
+                destination:
+                    process.env.NODE_ENV === "development"
+                        ? "http://127.0.0.1:8000/api/py/:path*" // ローカル
+                        : "/api/", // 本番（サーバーレス関数）
+            },
+        ];
+    },
+};
+
+export default nextConfig;
+
+// ポイント
+// destination の本番側が /api/ （末尾スラッシュあり）になっている点に注意。
+// Vercel が api/index.py をサーバーレス関数として /api/ にマウントするため。
+</file>
+
 <file path="package.json">
 {
   "name": "gbiz-corp-search",
@@ -1705,28 +1502,221 @@ export default function CorporateSearchPage() {
 }
 </file>
 
-<file path="next.config.ts">
-import type { NextConfig } from "next";
+<file path="api/index.py">
+# api/index.py
 
-const nextConfig: NextConfig = {
-    rewrites: async () => {
-        return [
-            {
-                source: "/api/py/:path*",
-                destination:
-                    process.env.NODE_ENV === "development"
-                        ? "http://127.0.0.1:8000/api/py/:path*" // ローカル
-                        : "/api/", // 本番（サーバーレス関数）
-            },
-        ];
-    },
-};
+import asyncio
 
-export default nextConfig;
+import httpx
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
-// ポイント
-// destination の本番側が /api/ （末尾スラッシュあり）になっている点に注意。
-// Vercel が api/index.py をサーバーレス関数として /api/ にマウントするため。
+from api.gbiz.endpoints import get_endpoints
+from api.gbiz.formatter import build_full_markdown, format_section
+
+# ---------- APIキー取得 ----------
+
+
+class Settings(BaseSettings):
+    GBIZ_API_TOKEN: str
+
+    class Config:
+        env_file = ".env.local"
+
+
+settings = Settings()
+
+# ---------- アプリケーションのセットアップ ----------
+
+app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
+
+# CORS設定
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",                   # ローカル開発環境
+        "https://gbiz-corp-search.vercel.app",     # 本番環境（Vercel）
+    ],
+    allow_methods=["POST", "GET"],
+    allow_headers=["*"],
+)
+
+# gBizINFO APIのベースURL
+GBIZ_BASE_URL = "https://api.info.gbiz.go.jp/hojin/v2/hojin"
+
+
+# ヘッダー定義
+def _get_headers() -> dict:
+    token = settings.GBIZ_API_TOKEN
+    if not token:
+        raise HTTPException(
+            status_code=500, detail="GBIZ_API_TOKEN が設定されていません"
+        )
+    return {
+        "accept": "application/json",
+        "X-hojinInfo-api-token": token,
+    }
+
+
+# ---------- リクエスト/レスポンス スキーマ ----------
+
+
+class SearchRequest(BaseModel):
+    corp_name: str
+
+
+class Candidate(BaseModel):
+    name: str
+    location: str
+    corporate_number: str
+
+
+class SearchResponse(BaseModel):
+    status: str  # "success" | "multiple" | "not_found"
+    # successのとき
+    markdown: str | None = None
+    corporate_number: str | None = None
+    corp_name: str | None = None
+    corp_location: str | None = None
+    url: str | None = None
+    # multipleのとき
+    message: str | None = None
+    candidates: list[Candidate] | None = None
+
+
+# ---------- エンドポイント ----------
+
+
+# 動作チェック
+@app.get("/api/py/healthcheck")
+async def healthcheck():
+    return {"status": "ok"}
+
+
+# 検索実行
+@app.post("/api/py/search/corp", response_model=SearchResponse)
+async def search_corp(req: SearchRequest) -> SearchResponse:
+    headers = _get_headers()
+    corp_name = req.corp_name.strip()
+
+    if not corp_name:
+        raise HTTPException(status_code=400, detail="corp_name は必須です")
+
+    # セッションを再利用してパフォーマンスを向上させる
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        # --- 法人検索（法人番号を取得するため） ---
+        resp = await client.get(
+            url=f"{GBIZ_BASE_URL}?name={corp_name}&exist_flg=true&page=1&limit=100&metadata_flg=false",
+            headers=headers,
+        )
+
+        # 見つからなかった場合
+        if resp.status_code == 404:
+            return SearchResponse(
+                status="not_found",
+                message=f"「{corp_name}」は見つかりませんでした。",
+            )
+
+        # 404以外のエラー（共通）
+        if resp.status_code != 200:
+            raise HTTPException(
+                status_code=resp.status_code,
+                detail=f"gBizINFO APIエラー: {resp.json().get('message', '不明なエラー')}",
+            )
+
+        body = resp.json()
+        hojin_infos: list[dict] = body.get("hojin-infos", [])
+
+        # --- 企業を1件に特定できたか判定 ---
+        if len(hojin_infos) == 0:
+            return SearchResponse(
+                status="not_found",
+                message=f"「{corp_name}」は見つかりませんでした。",
+            )
+
+        # 特定できなかった場合、[企業名, 所在地, 法人番号]の一覧を返す
+        if len(hojin_infos) > 1:
+            candidates = [
+                Candidate(
+                    name=h.get("name", ""),
+                    location=h.get("location", ""),
+                    corporate_number=h.get("corporate_number", ""),
+                )
+                for h in hojin_infos
+            ]
+            return SearchResponse(
+                status="multiple",
+                message=f"「{corp_name}」で{len(hojin_infos)}件見つかりました。対象の企業を選択してください。",
+                candidates=candidates,
+            )
+
+        # --- 法人番号取得 ---
+        hojin_info = hojin_infos[0]
+        corp_num: str = hojin_info["corporate_number"]
+        resolved_name: str = hojin_info.get("name", corp_name)
+        corp_location: str = hojin_info.get("location", "")
+
+        # --- 法人番号を基に、各エンドポイントを並行で取得 ---
+        endpoints = get_endpoints()
+        # 並行処理後の順序を保つための配列を準備
+        sections: list[str] = [""] * len(endpoints)
+
+        # APIサーバーへの負荷を考慮し、同時接続数を3に制限
+        sem = asyncio.Semaphore(3)
+
+        async def fetch_endpoint(index: int, item: dict):
+            endpoint_path = item["endpoint"]
+            async with sem:
+                try:
+                    ep_resp = await client.get(
+                        url=f"{GBIZ_BASE_URL}/{corp_num}{endpoint_path}?metadata_flg=false",
+                        headers=headers,
+                    )
+                    ep_body = (
+                        ep_resp.json()
+                        if ep_resp.status_code == 200
+                        else {"hojin-infos": []}
+                    )
+                except Exception:
+                    # 通信エラー時は空のデータを渡してフォールバック
+                    ep_body = {"hojin-infos": []}
+
+                # 整形結果を正しいインデックスに格納
+                sections[index] = format_section(ep_body, item)
+                # 次のリクエストとの間隔をわずかに空ける（負荷軽減用）
+                await asyncio.sleep(0.1)
+
+        # 全エンドポイントのタスクを生成して一斉に実行
+        tasks = [fetch_endpoint(i, item) for i, item in enumerate(endpoints)]
+        await asyncio.gather(*tasks)
+
+    # --- 出力テキスト整形 ---
+    markdown = build_full_markdown(
+        corp_name=resolved_name,
+        corp_num=corp_num,
+        corp_location=corp_location,
+        sections=sections,
+    )
+    gbiz_url = f"https://info.gbiz.go.jp/hojin/ichiran?hojinBango={corp_num}"
+
+    return SearchResponse(
+        status="success",
+        markdown=markdown,
+        corporate_number=corp_num,
+        corp_name=resolved_name,
+        corp_location=corp_location,
+        url=gbiz_url,
+    )
+
+
+# 補足: タイムアウトによるエラーを想定した処理は実装しない 
+# `httpx.AsyncClient(timeout=15.0)`
+# 理由:
+# - 処理は2～3秒程度で完了する
+# - このアプリ以外にも普段から利用しているが、極端に遅延するケースは遭遇したことがない
+# - 今回の規模としては過剰になる
 </file>
 
 <file path="README.md">
@@ -1757,7 +1747,7 @@ gBizINFO API から法人情報を取得し、日本語 Markdown として出力
 
 ## 実装のポイント
 
-### 日本語キーマップによる変換
+### LLMフレンドリーなデータ変換＆日本語キーマップによる変換
 
 gBizINFO API のレスポンスは英語のキー名で返されます。本アプリでは、英語キーを日本語に変換するマッピングテーブル（`api/gbiz/keymap.py`）を独自に定義し、出力を日本語 Markdown に変換しています。
 
@@ -1778,6 +1768,14 @@ basic_map = {
 2026年1月26日にリニューアルしたAPIの仕様に対応しています。
 
 REST API （v1）--> REST API （v2）
+
+### APIの並行処理と負荷制御
+
+外部API（特に政府系）への負荷を考慮した設計。
+
+`api/index.py` にて、gBizINFOの複数エンドポイント(計9種)を叩く際に `asyncio.gather` で並行処理しつつ、
+`asyncio.Semaphore(3)` で同時接続数を制御し、さらに `await asyncio.sleep(0.1)` で間隔を空けている。
+
 
 ## 技術スタック
 
@@ -1856,6 +1854,7 @@ npm run dev
 
 ## ディレクトリ構造
 
+
 ```
 gbiz-corp-search
 ├─ api
@@ -1870,24 +1869,24 @@ gbiz-corp-search
 │  ├─ globals.css
 │  ├─ layout.tsx
 │  └─ page.tsx
+├─ components
+│  ├─ CandidateList.tsx
+│  ├─ ResultView.tsx
+│  └─ SearchForm.tsx
 ├─ eslint.config.mjs
 ├─ next.config.ts
 ├─ package-lock.json
 ├─ package.json
 ├─ postcss.config.mjs
-├─ public
-│  ├─ file.svg
-│  ├─ globe.svg
-│  ├─ next.svg
-│  ├─ vercel.svg
-│  └─ window.svg
 ├─ README.md
 ├─ repomix-output.xml
 ├─ requirements.txt
 ├─ styles
 │  └─ markdown_style.css
 ├─ tailwind.config.js
-└─ tsconfig.json
+├─ tsconfig.json
+└─ types
+   └─ index.ts
 
 ```
 </file>

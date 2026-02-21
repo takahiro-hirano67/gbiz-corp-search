@@ -132,6 +132,7 @@ npm run dev
 
 ## ディレクトリ構造
 
+
 ```
 gbiz-corp-search
 ├─ api
@@ -146,23 +147,23 @@ gbiz-corp-search
 │  ├─ globals.css
 │  ├─ layout.tsx
 │  └─ page.tsx
+├─ components
+│  ├─ CandidateList.tsx
+│  ├─ ResultView.tsx
+│  └─ SearchForm.tsx
 ├─ eslint.config.mjs
 ├─ next.config.ts
 ├─ package-lock.json
 ├─ package.json
 ├─ postcss.config.mjs
-├─ public
-│  ├─ file.svg
-│  ├─ globe.svg
-│  ├─ next.svg
-│  ├─ vercel.svg
-│  └─ window.svg
 ├─ README.md
 ├─ repomix-output.xml
 ├─ requirements.txt
 ├─ styles
 │  └─ markdown_style.css
 ├─ tailwind.config.js
-└─ tsconfig.json
+├─ tsconfig.json
+└─ types
+   └─ index.ts
 
 ```
