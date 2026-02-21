@@ -30,7 +30,10 @@ app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 # CORS設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",                   # ローカル開発環境
+        "https://gbiz-corp-search.vercel.app",     # 本番環境（Vercel）
+    ],
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
@@ -201,3 +204,11 @@ async def search_corp(req: SearchRequest) -> SearchResponse:
         corp_location=corp_location,
         url=gbiz_url,
     )
+
+
+# 補足: タイムアウトによるエラーを想定した処理は実装しない 
+# `httpx.AsyncClient(timeout=15.0)`
+# 理由:
+# - 処理は2～3秒程度で完了する
+# - このアプリ以外にも普段から利用しているが、極端に遅延するケースは遭遇したことがない
+# - 今回の規模としては過剰になる
