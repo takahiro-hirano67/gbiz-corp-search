@@ -51,6 +51,9 @@ app/favicon.ico
 app/globals.css
 app/layout.tsx
 app/page.tsx
+components/CandidateList.tsx
+components/ResultView.tsx
+components/SearchForm.tsx
 eslint.config.mjs
 next.config.ts
 package.json
@@ -62,12 +65,318 @@ public/vercel.svg
 public/window.svg
 README.md
 requirements.txt
-Tailwind.config.js
+styles/markdown_style.css
+tailwind.config.js
 tsconfig.json
+types/index.ts
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="components/CandidateList.tsx">
+// components/CandidateList.tsx
+
+// 検索結果が複数あった場合のサジェストUIを担当
+
+import { AlertTriangle, ChevronRight, MapPin } from "lucide-react";
+import { Candidate } from "@/types";
+
+type CandidateListProps = {
+    message: string;
+    candidates: Candidate[];
+    onSelect: (candidate: Candidate) => void;
+};
+
+export default function CandidateList({ message, candidates, onSelect }: CandidateListProps) {
+    return (
+        <section>
+            <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800">{message}</p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+                {candidates.map((c) => (
+                    <button
+                        key={c.corporate_number}
+                        onClick={() => onSelect(c)}
+                        className="bg-white border border-slate-200 rounded-xl p-5 text-left hover:border-blue-400 hover:shadow-xs transition-all group"
+                    >
+                        <p className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors text-sm mb-2">
+                            {c.name}
+                        </p>
+                        <p className="text-xs text-slate-500 flex items-start gap-1 mb-1">
+                            <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" />
+                            {c.location}
+                        </p>
+                        <p className="text-xs text-slate-400 font-mono">
+                            法人番号: {c.corporate_number}
+                        </p>
+                        <div className="mt-3 flex justify-end">
+                            <span className="text-xs font-medium text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                この企業で検索
+                                <ChevronRight className="w-3 h-3" />
+                            </span>
+                        </div>
+                    </button>
+                ))}
+            </div>
+        </section>
+    );
+}
+</file>
+
+<file path="components/ResultView.tsx">
+// components/ResultView.tsx
+
+// Markdownのレンダリングと、コピーやダウンロードなどのツールバー機能を集約。
+
+import { Copy, Download, ExternalLink, RotateCcw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
+import { SearchResponse } from "@/types";
+
+type ResultViewProps = {
+    result: SearchResponse;
+    corpName: string;
+    onReset: () => void;
+};
+
+export default function ResultView({ result, corpName, onReset }: ResultViewProps) {
+    if (!result.markdown) return null;
+
+    // コピー処理
+    const handleCopy = () => {
+        navigator.clipboard.writeText(result.markdown!);
+    };
+
+    // ダウンロード処理
+    const handleDownload = () => {
+        const blob = new Blob([result.markdown!], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${result.corp_name ?? corpName}_企業情報.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    return (
+        <section className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+            {/* ツールバー */}
+            <div className="border-b border-slate-200 bg-slate-50 px-5 py-3 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-mono min-w-0">
+                    <span className="truncate">法人番号: {result.corporate_number}</span>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                    <button
+                        onClick={handleCopy}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                    >
+                        <Copy className="w-3.5 h-3.5" />
+                        コピー
+                    </button>
+                    <button
+                        onClick={handleDownload}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                    >
+                        <Download className="w-3.5 h-3.5" />
+                        ダウンロード
+                    </button>
+                    {result.url && (
+                        <a
+                            href={result.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 bg-white text-blue-600 hover:bg-blue-50 transition"
+                        >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            gBizINFO
+                        </a>
+                    )}
+                    <button
+                        onClick={onReset}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition"
+                    >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        リセット
+                    </button>
+                </div>
+            </div>
+
+            {/* Markdown本文 */}
+            <div className="markdown p-8 prose prose-sm prose-slate max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkBreaks]}>
+                    {result.markdown}
+                </ReactMarkdown>
+            </div>
+        </section>
+    );
+}
+</file>
+
+<file path="components/SearchForm.tsx">
+// components/SearchForm.tsx
+
+// 検索の入力とボタン、ローディング状態を受け取って描画
+
+import { Loader2, Search } from "lucide-react";
+import { RefObject } from "react";
+
+type SearchFormProps = {
+    corpName: string;
+    setCorpName: (name: string) => void;
+    onSearch: () => void;
+    isLoading: boolean;
+    inputRef: RefObject<HTMLInputElement | null>;
+};
+
+export default function SearchForm({
+    corpName,
+    setCorpName,
+    onSearch,
+    isLoading,
+    inputRef,
+}: SearchFormProps) {
+    return (
+        <section className="bg-white rounded-xl border border-slate-200 shadow-xs p-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+                企業名
+                <span className="ml-1 text-red-500">*</span>
+            </label>
+            <div className="flex gap-3">
+                <input
+                    ref={inputRef}
+                    type="text"
+                    value={corpName}
+                    onChange={(e) => setCorpName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && onSearch()}
+                    placeholder="例: 株式会社良品計画"
+                    className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-slate-400 transition"
+                />
+                <button
+                    onClick={onSearch}
+                    disabled={isLoading || !corpName.trim()}
+                    className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-2 shrink-0"
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            検索中
+                        </>
+                    ) : (
+                        <>
+                            <Search className="w-4 h-4" />
+                            検索
+                        </>
+                    )}
+                </button>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+                同名企業が複数ある場合は候補一覧から選択してください
+            </p>
+        </section>
+    );
+}
+</file>
+
+<file path="styles/markdown_style.css">
+/* styles/markdown_style.css */
+
+/*
+    ============================================================
+    Markdownのスタイルを適用するCSS
+    ============================================================
+*/
+
+/* 見出し */
+.markdown h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 1.75rem 0 1rem;
+}
+.markdown h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 1.75rem 0 0.5rem;
+}
+.markdown h3 {
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 1.75rem 0 0.5rem;
+}
+.markdown h4 {
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 1.75rem 0 0.5rem;
+}
+.markdown h5 {
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 1.75rem 0 0.5rem;
+}
+.markdown h6 {
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 1.75rem 0 0.5rem;
+}
+/* 基本書式 */
+.markdown p {
+    margin-bottom: 1rem;
+}
+.markdown hr {
+    border-top: 1px solid #c4c7c5;
+    margin: 0.5rem 0;
+}
+/* リスト */
+.markdown ul {
+    padding-left: 1.6875rem;
+    margin: 0.5rem 0 1rem;
+}
+.markdown ol {
+    padding-left: 1.6875rem;
+    margin: 0.5rem 0 1rem;
+}
+.markdown li {
+    padding-left: 0.25rem;
+    margin-bottom: 0.5rem;
+    list-style: inside;
+    list-style-position: outside;
+}
+.markdown ul li p {
+    padding-left: 0.025rem;
+    margin: 0.5rem 0;
+}
+</file>
+
+<file path="types/index.ts">
+// types/index.ts
+
+// 複数のファイルで使い回す型を定義
+
+// 検索結果が複数だった場合の型
+export type Candidate = {
+    name: string;
+    location: string;
+    corporate_number: string;
+};
+
+// 検索結果（単体）の型
+export type SearchResponse = {
+    status: "success" | "multiple" | "not_found";
+    // success時
+    markdown?: string;
+    corporate_number?: string;
+    corp_name?: string;
+    corp_location?: string;
+    url?: string;
+    // multiple時
+    message?: string;
+    candidates?: Candidate[];
+};
+</file>
 
 <file path=".env.local.example">
 # gBizINFO API トークン
@@ -83,15 +392,17 @@ GBIZ_API_TOKEN=your_token_here
 </file>
 
 <file path="api/gbiz/endpoints.py">
+# api/gbiz/endpoints.py
+
 from api.gbiz.keymap import get_keymaps
 
-
+# エンドポイントリスト（処理用の情報も持たせる）
 def get_endpoints() -> list[dict]:
     keymaps = get_keymaps()
 
     return [
         {
-            "endpoint": "",
+            "endpoint": "", # 末尾なし/明示的に空文字列として定義
             "label_en": "basic",
             "label_ja": "法人基本情報",
             "convert_map": keymaps["basic_map"],
@@ -148,42 +459,69 @@ def get_endpoints() -> list[dict]:
 </file>
 
 <file path="api/gbiz/formatter.py">
-def translate_keys(data: any, mapping: dict) -> any:
-    """キーを日本語に置換する再帰関数（結果取得/法人情報ノードより）"""
+# api/gbiz/formatter.py
+
+from typing import Any
+
+
+def translate_keys(data: Any, mapping: dict) -> Any:
+    """キーを日本語に置換する再帰関数"""
+
+    # 辞書の場合
     if isinstance(data, dict):
         new_data = {}
+        # 各キーをループ
         for k, v in data.items():
+            # "meta-data" の除外
             if k == "meta-data":
                 continue
+            # マップにあれば日本語に置換、なければ元のキーを使用
             new_key = mapping.get(k, k)
+            # 値にも再帰的に translate_keys を適用
             new_data[new_key] = translate_keys(v, mapping)
         return new_data
+
+    # リストの場合
     elif isinstance(data, list):
+        # リスト内の全要素に対して再帰処理
         return [translate_keys(item, mapping) for item in data]
+
+    # それ以外の場合（文字列・数字など）
     else:
         return data
 
 
-def to_markdown(data: any, level: int = 0) -> str:
-    """辞書/リストをMarkdownに変換する関数（結果取得/法人情報ノードより）"""
+def to_markdown(data: Any, level: int = 0) -> str:
+    """辞書/リストをMarkdownに変換する関数"""
+
+    # 階層レベルごとにインデント（半角スペース2つ）を増やす
     indent = "  " * level
+    # Markdown
     md = ""
 
+    # 辞書の場合
     if isinstance(data, dict):
         for k, v in data.items():
+            # 値が`更に`構造体（dict or list）の場合
             if isinstance(v, (dict, list)):
                 md += f"{indent}- **{k}**:\n{to_markdown(v, level + 1)}"
+            # 値が単純な文字列/数値の場合
             elif v is not None:
                 md += f"{indent}- **{k}**: {v}\n"
+            # Noneの場合
             else:
                 md += f"{indent}- **{k}**: (なし)\n"
 
+    # リストの場合
     elif isinstance(data, list):
+        # 空リストの場合の表示
         if not data:
             md += f"{indent}(データなし)\n"
+        # 要素ありの場合（番号付きで整理）
         else:
             for i, item in enumerate(data):
                 md += f"{indent}- *項目 {i + 1}*:\n{to_markdown(item, level + 1)}"
+    # その他の型（そのまま文字列化）
     else:
         md += f"{indent}{str(data)}\n"
 
@@ -193,12 +531,13 @@ def to_markdown(data: any, level: int = 0) -> str:
 def format_section(body: dict, item: dict) -> str:
     """
     1エンドポイント分のレスポンスをMarkdownセクションに整形する。
-    結果取得/法人情報（コード実行）ノードの処理に相当。
     """
-    convert_map = item["convert_map"]
-    label_ja = item["label_ja"]
-    label_en = item.get("label_en", "")
+    # オブジェクトから情報取得
+    convert_map = item["convert_map"]  # キー変換マップ
+    label_ja = item["label_ja"]  # 日本語ラベル（セクション見出し）
+    label_en = item.get("label_en", "")  # 英語ラベル（処理用の識別子）
 
+    # データ存在Check
     if not body.get("hojin-infos") or len(body["hojin-infos"]) == 0:
         return f"### {label_ja}\n(データなし)\n"
 
@@ -206,12 +545,17 @@ def format_section(body: dict, item: dict) -> str:
 
     # 基本情報以外は共通ヘッダを削除
     if label_en != "basic":
+        # 削除したいキーのリスト
         for key in ["corporate_number", "name", "location"]:
-            raw_data.pop(key, None)
+            raw_data.pop(key, None)  # キーがあれば削除、なければ無視
 
+    # キーを日本語に置換
     translated_data = translate_keys(raw_data, convert_map)
+
+    # Markdown生成
     md_body = to_markdown(translated_data)
 
+    # セクション完成
     return f"### {label_ja}\n\n{md_body.strip()}\n"
 
 
@@ -221,8 +565,8 @@ def build_full_markdown(
     corp_location: str,
     sections: list[str],
 ) -> str:
-    """全セクションを結合して最終Markdownを生成する（出力テキスト整形テンプレートに相当）"""
-    sections_text = "\n\n---\n\n".join(sections)
+    """全セクションを結合して最終Markdownを生成する"""
+    sections_text = "\n\n---\n\n".join(sections)  # セクション間に区切り線を入れる
 
     return f"""# gBizINFOから企業の法人情報取得
 
@@ -247,7 +591,15 @@ def build_full_markdown(
 </file>
 
 <file path="api/gbiz/keymap.py">
+# api/gbiz/keymap.py
+
 def get_keymaps() -> dict:
+
+    # ==========================================
+    # 共通: メタデータ (Common Meta-data)
+    # ※各情報のオブジェクト内に共通して含まれる定義
+    # ==========================================
+
     common_metadata_map = {
         "data_quality": "データ品質",
         "import_frequency": "データ取込頻度",
@@ -256,6 +608,10 @@ def get_keymaps() -> dict:
         "last_update_date": "最終更新日",
         "source": "出典元"
     }
+
+    # ==========================================
+    # 1. 法人基本情報 (Basic)
+    # ==========================================
 
     basic_map = {
         "corporate_number": "法人番号",
@@ -283,51 +639,83 @@ def get_keymaps() -> dict:
         "qualification_grade": "全省庁統一資格の資格等級",
         "industry": "業種",
         "business_items": "全省庁統一資格の営業品目",
+
+        # --- meta-data (Root) ---
+        # 法人基本情報の直下にあるメタデータオブジェクトのキー
         "meta-data": "メタデータ",
         **common_metadata_map
     }
 
+    # ==========================================
+    # 2. 届出・認定情報 (Certification)
+    # ==========================================
+
     certification_map = {
-        "certification": "届出・認定リスト",
+        "certification": "届出・認定リスト", # 親要素
+        # --- certification items ---
         "title": "届出認定等",
         "category": "部門",
         "target": "対象",
         "government_departments": "府省",
         "date_of_approval": "認定日",
+
+        # --- meta-data ---
         "meta-data": "メタデータ",
         **common_metadata_map
     }
 
+    # ==========================================
+    # 3. 表彰情報 (Commendation)
+    # ==========================================
+
     commendation_map = {
-        "commendation": "表彰リスト",
+        "commendation": "表彰リスト", # 親要素
+        # --- commendation items ---
         "title": "表彰名",
         "category": "部門",
         "target": "受賞対象",
         "government_departments": "府省",
         "date_of_commendation": "年月日",
         "note": "備考",
+        # --- meta-data ---
         "meta-data": "メタデータ",
         **common_metadata_map
     }
 
+    # ==========================================
+    # 4. 事業所情報 (Corporation)
+    # ==========================================
+
     corporation_map = {
-        "corporation-info": "事業所リスト",
+        "corporation-info": "事業所リスト", # 親要素 (ハイフン注意)
+        # --- corporation-info items ---
         "corporation_name": "事業所名",
         "corporation_name_furigana": "事業所名フリガナ",
         "corporation_location": "事業所所在地",
         "corporation_location_furigana": "事業所所在地フリガナ",
         "insured_number": "被保険者数",
         "loss_date": "全喪年月日",
+
+        # --- meta-data ---
         "meta-data": "メタデータ",
         **common_metadata_map
     }
 
+    # ==========================================
+    # 5. 財務情報 (Finance)
+    # ==========================================
+
     finance_map = {
-        "finance": "財務情報詳細",
+        "finance": "財務情報詳細", # 親要素
+        # --- finance (Root) ---
         "accounting_standards": "会計基準",
         "fiscal_year_cover_page": "事業年度",
+
+        # 内部オブジェクトのキー
         "management_index": "財務指標",
         "major_shareholders": "大株主",
+
+        # --- management_index (財務) ---
         "period": "回次",
         "net_sales_summary_of_business_results": "売上高",
         "net_sales_summary_of_business_results_unit_ref": "売上高(単位)",
@@ -353,67 +741,111 @@ def get_keymaps() -> dict:
         "ordinary_income_summary_of_business_results_unit_ref": "経常収益（単位）",
         "net_premiums_written_summary_of_business_results_ins": "正味収入保険料",
         "net_premiums_written_summary_of_business_results_ins_unit_ref": "正味収入保険料（単位）",
+
+        # --- major_shareholders (大株主) ---
         "name_major_shareholders": "氏名又は名称",
         "shareholding_ratio": "発行済株式総数に対する所有株式数の割合",
+
+        # --- meta-data ---
         "meta-data": "メタデータ",
         **common_metadata_map
     }
 
+    # ==========================================
+    # 6. 特許情報 (Patent)
+    # ==========================================
+
     patent_map = {
-        "patent": "特許・商標リスト",
+        "patent": "特許・商標リスト", # 親要素
+
+        # --- patent items ---
         "patent_type": "特許/意匠/商標",
         "title": "発明の名称(等)/意匠に係る物品/表示用商標",
         "application_date": "出願年月日",
         "registration_number": "登録番号",
         "url": "文献固定アドレス",
+
+        # --- classifications (分類) ---
         "classifications": "分類",
+
+        # --- meta-data ---
         "meta-data": "メタデータ",
         **common_metadata_map
     }
 
+    # ==========================================
+    # 7. 調達情報 (Procurement)
+    # ==========================================
+
     procurement_map = {
-        "procurement": "調達実績リスト",
+        "procurement": "調達実績リスト", # 親要素
+
+        # --- procurement items ---
         "title": "事業名",
         "government_departments": "府省",
         "date_of_order": "受注日",
         "amount": "金額",
         "note": "備考",
+
+        # --- meta-data ---
         "meta-data": "メタデータ",
         **common_metadata_map
     }
 
+    # ==========================================
+    # 8. 補助金情報 (Subsidy)
+    # ==========================================
+
     subsidy_map = {
-        "subsidy": "補助金交付リスト",
+        "subsidy": "補助金交付リスト", # 親要素
+
+        # --- subsidy items ---
         "title": "補助金等",
         "target": "対象",
         "government_departments": "府省",
         "date_of_approval": "認定日",
         "amount": "金額",
+
+        # --- meta-data ---
         "meta-data": "メタデータ",
         **common_metadata_map
     }
 
+    # ==========================================
+    # 9. 職場情報 (Workplace)
+    # ==========================================
+
     workplace_map = {
-        "workplace_info": "職場情報詳細",
+        "workplace_info": "職場情報詳細", # 親要素
+
+        # 内部オブジェクトのキー
         "base_infos": "勤務基本情報",
         "compatibility_of_childcare_and_work": "育児・仕事の両立支援",
         "women_activity_infos": "女性活躍推進情報",
+
+        # --- base_infos (勤務基本情報) ---
         "average_age": "従業員の平均年齢",
         "average_continuous_service_years": "正社員の平均継続勤務年数",
         "average_continuous_service_years_Male": "平均継続勤務年数-男性",
         "average_continuous_service_years_Female": "平均継続勤務年数-女性",
         "average_continuous_service_years_type": "平均継続勤務年数-範囲",
         "month_average_predetermined_overtime_hours": "月平均所定外労働時間",
+        
+        # --- compatibility_of_childcare_and_work (育児・仕事の両立に関する情報) ---
         "number_of_maternity_leave": "育児休業対象者数（女性）",
         "maternity_leave_acquisition_num": "育児休業取得者数（女性）",
         "number_of_paternity_leave": "育児休業対象者数（男性）",
         "paternity_leave_acquisition_num": "育児休業取得者数（男性）",
+
+        # --- women_activity_infos (女性の活躍に関する情報) ---
         "female_share_of_manager": "女性管理職人数",
         "gender_total_of_manager": "管理職全体人数（男女計）",
         "female_share_of_officers": "女性役員人数",
         "gender_total_of_officers": "役員全体人数（男女計）",
         "female_workers_proportion": "労働者に占める女性労働者の割合",
         "female_workers_proportion_type": "労働者に占める女性労働者の割合-範囲",
+
+        # --- meta-data ---
         "meta-data": "メタデータ",
         **common_metadata_map
     }
@@ -431,202 +863,114 @@ def get_keymaps() -> dict:
     }
 </file>
 
-<file path="api/index.py">
-import time
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 
-import requests
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
 
-from api.gbiz.endpoints import get_endpoints
-from api.gbiz.formatter import build_full_markdown, format_section
+export default eslintConfig;
+</file>
 
+<file path="postcss.config.mjs">
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
 
-class Settings(BaseSettings):
-    GBIZ_API_TOKEN: str
+export default config;
+</file>
 
-    class Config:
-        env_file = ".env.local"
+<file path="public/file.svg">
+<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
+</file>
 
+<file path="public/globe.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
+</file>
 
-settings = Settings()
+<file path="public/next.svg">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
+</file>
 
-app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
+<file path="public/vercel.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+</file>
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-GBIZ_BASE_URL = "https://api.info.gbiz.go.jp/hojin/v2/hojin"
-
-
-def _get_headers() -> dict:
-    token = settings.GBIZ_API_TOKEN
-    if not token:
-        raise HTTPException(
-            status_code=500, detail="GBIZ_API_TOKEN が設定されていません"
-        )
-    return {
-        "accept": "application/json",
-        "X-hojinInfo-api-token": token,
-    }
-
-
-# ---------- リクエスト/レスポンス スキーマ ----------
-
-
-class SearchRequest(BaseModel):
-    corp_name: str
-
-
-class Candidate(BaseModel):
-    name: str
-    location: str
-    corporate_number: str
-
-
-class SearchResponse(BaseModel):
-    status: str  # "success" | "multiple" | "not_found"
-    # success
-    markdown: str | None = None
-    corporate_number: str | None = None
-    corp_name: str | None = None
-    corp_location: str | None = None
-    url: str | None = None
-    # multiple
-    message: str | None = None
-    candidates: list[Candidate] | None = None
-
-
-# ---------- エンドポイント ----------
-
-
-@app.get("/api/py/healthcheck")
-def healthcheck():
-    return {"status": "ok"}
-
-
-@app.post("/api/py/search/corp", response_model=SearchResponse)
-def search_corp(req: SearchRequest) -> SearchResponse:
-    headers = _get_headers()
-    corp_name = req.corp_name.strip()
-
-    if not corp_name:
-        raise HTTPException(status_code=400, detail="corp_name は必須です")
-
-    # --- 法人検索（コード実行ノードに相当） ---
-    resp = requests.get(
-        url=f"{GBIZ_BASE_URL}?name={corp_name}&exist_flg=true&page=1&limit=100&metadata_flg=false",
-        headers=headers,
-        timeout=15,
-    )
-
-    if resp.status_code == 404:
-        return SearchResponse(
-            status="not_found",
-            message=f"「{corp_name}」は見つかりませんでした。",
-        )
-
-    if resp.status_code != 200:
-        raise HTTPException(
-            status_code=resp.status_code,
-            detail=f"gBizINFO APIエラー: {resp.json().get('message', '不明なエラー')}",
-        )
-
-    body = resp.json()
-    hojin_infos: list[dict] = body.get("hojin-infos", [])
-
-    # --- 企業を特定できたか判定（IF/ELSEノードに相当） ---
-    if len(hojin_infos) == 0:
-        return SearchResponse(
-            status="not_found",
-            message=f"「{corp_name}」は見つかりませんでした。",
-        )
-
-    if len(hojin_infos) > 1:
-        candidates = [
-            Candidate(
-                name=h.get("name", ""),
-                location=h.get("location", ""),
-                corporate_number=h.get("corporate_number", ""),
-            )
-            for h in hojin_infos
-        ]
-        return SearchResponse(
-            status="multiple",
-            message=f"「{corp_name}」で{len(hojin_infos)}件見つかりました。対象の企業を選択してください。",
-            candidates=candidates,
-        )
-
-    # --- 法人番号取得（コード実行ノードに相当） ---
-    hojin_info = hojin_infos[0]
-    corp_num: str = hojin_info["corporate_number"]
-    resolved_name: str = hojin_info.get("name", corp_name)
-    corp_location: str = hojin_info.get("location", "")
-
-    # --- イテレーション（各エンドポイントを順次取得） ---
-    endpoints = get_endpoints()
-    sections: list[str] = []
-
-    for item in endpoints:
-        endpoint_path = item["endpoint"]
-        ep_resp = requests.get(
-            url=f"{GBIZ_BASE_URL}/{corp_num}{endpoint_path}?metadata_flg=false",
-            headers=headers,
-            timeout=15,
-        )
-        ep_body = ep_resp.json() if ep_resp.status_code == 200 else {"hojin-infos": []}
-        sections.append(format_section(ep_body, item))
-        time.sleep(0.6)  # 負荷軽減クールタイム（法人情報取得ノードより）
-
-    # --- 出力テキスト整形（テンプレートノードに相当） ---
-    markdown = build_full_markdown(
-        corp_name=resolved_name,
-        corp_num=corp_num,
-        corp_location=corp_location,
-        sections=sections,
-    )
-    gbiz_url = (
-        f"https://info.gbiz.go.jp/hojin/ichiran?hojinBango={corp_num}"
-    )
-
-    return SearchResponse(
-        status="success",
-        markdown=markdown,
-        corporate_number=corp_num,
-        corp_name=resolved_name,
-        corp_location=corp_location,
-        url=gbiz_url,
-    )
+<file path="public/window.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
 </file>
 
 <file path="requirements.txt">
 fastapi==0.129.0
 uvicorn[standard]==0.41.0
 pydantic-settings==2.13.1
-requests==2.32.5
+httpx==0.28.1
 </file>
 
-<file path="Tailwind.config.js">
-/** @type {import('tailwindcss').Config} **/
-
-module.exports = {
+<file path="tailwind.config.js">
+/** @type {import('tailwindcss').Config} */
+export default {
     content: [
-        "./app/**/*.{js,ts,jsx,tsx,mdx}",
-        "./components/**/*.{js,ts,jsx,tsx,mdx}",
+        "./app/**/*.{js,ts,jsx,tsx}",
+        "./components/**/*.{js,ts,jsx,tsx}",
+        "./hooks/**/*.{js,ts,jsx,tsx}",
     ],
     theme: {
         extend: {},
     },
-    plugins: [
-        require("@tailwindcss/typography"),
-    ],
+    plugins: [],
 };
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
 </file>
 
 <file path=".gitignore">
@@ -889,7 +1233,215 @@ marimo/_lsp/
 __marimo__/
 </file>
 
+<file path="api/index.py">
+# api/index.py
+
+import asyncio
+
+import httpx
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
+
+from api.gbiz.endpoints import get_endpoints
+from api.gbiz.formatter import build_full_markdown, format_section
+
+# ---------- APIキー取得 ----------
+
+
+class Settings(BaseSettings):
+    GBIZ_API_TOKEN: str
+
+    class Config:
+        env_file = ".env.local"
+
+
+settings = Settings()
+
+# ---------- アプリケーションのセットアップ ----------
+
+app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
+
+# CORS設定
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["POST", "GET"],
+    allow_headers=["*"],
+)
+
+# gBizINFO APIのベースURL
+GBIZ_BASE_URL = "https://api.info.gbiz.go.jp/hojin/v2/hojin"
+
+
+# ヘッダー定義
+def _get_headers() -> dict:
+    token = settings.GBIZ_API_TOKEN
+    if not token:
+        raise HTTPException(
+            status_code=500, detail="GBIZ_API_TOKEN が設定されていません"
+        )
+    return {
+        "accept": "application/json",
+        "X-hojinInfo-api-token": token,
+    }
+
+
+# ---------- リクエスト/レスポンス スキーマ ----------
+
+
+class SearchRequest(BaseModel):
+    corp_name: str
+
+
+class Candidate(BaseModel):
+    name: str
+    location: str
+    corporate_number: str
+
+
+class SearchResponse(BaseModel):
+    status: str  # "success" | "multiple" | "not_found"
+    # successのとき
+    markdown: str | None = None
+    corporate_number: str | None = None
+    corp_name: str | None = None
+    corp_location: str | None = None
+    url: str | None = None
+    # multipleのとき
+    message: str | None = None
+    candidates: list[Candidate] | None = None
+
+
+# ---------- エンドポイント ----------
+
+
+# 動作チェック
+@app.get("/api/py/healthcheck")
+async def healthcheck():
+    return {"status": "ok"}
+
+
+# 検索実行
+@app.post("/api/py/search/corp", response_model=SearchResponse)
+async def search_corp(req: SearchRequest) -> SearchResponse:
+    headers = _get_headers()
+    corp_name = req.corp_name.strip()
+
+    if not corp_name:
+        raise HTTPException(status_code=400, detail="corp_name は必須です")
+
+    # セッションを再利用してパフォーマンスを向上させる
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        # --- 法人検索（法人番号を取得するため） ---
+        resp = await client.get(
+            url=f"{GBIZ_BASE_URL}?name={corp_name}&exist_flg=true&page=1&limit=100&metadata_flg=false",
+            headers=headers,
+        )
+
+        # 見つからなかった場合
+        if resp.status_code == 404:
+            return SearchResponse(
+                status="not_found",
+                message=f"「{corp_name}」は見つかりませんでした。",
+            )
+
+        # 404以外のエラー（共通）
+        if resp.status_code != 200:
+            raise HTTPException(
+                status_code=resp.status_code,
+                detail=f"gBizINFO APIエラー: {resp.json().get('message', '不明なエラー')}",
+            )
+
+        body = resp.json()
+        hojin_infos: list[dict] = body.get("hojin-infos", [])
+
+        # --- 企業を1件に特定できたか判定 ---
+        if len(hojin_infos) == 0:
+            return SearchResponse(
+                status="not_found",
+                message=f"「{corp_name}」は見つかりませんでした。",
+            )
+
+        # 特定できなかった場合、[企業名, 所在地, 法人番号]の一覧を返す
+        if len(hojin_infos) > 1:
+            candidates = [
+                Candidate(
+                    name=h.get("name", ""),
+                    location=h.get("location", ""),
+                    corporate_number=h.get("corporate_number", ""),
+                )
+                for h in hojin_infos
+            ]
+            return SearchResponse(
+                status="multiple",
+                message=f"「{corp_name}」で{len(hojin_infos)}件見つかりました。対象の企業を選択してください。",
+                candidates=candidates,
+            )
+
+        # --- 法人番号取得 ---
+        hojin_info = hojin_infos[0]
+        corp_num: str = hojin_info["corporate_number"]
+        resolved_name: str = hojin_info.get("name", corp_name)
+        corp_location: str = hojin_info.get("location", "")
+
+        # --- 法人番号を基に、各エンドポイントを並行で取得 ---
+        endpoints = get_endpoints()
+        # 並行処理後の順序を保つための配列を準備
+        sections: list[str] = [""] * len(endpoints)
+
+        # APIサーバーへの負荷を考慮し、同時接続数を3に制限
+        sem = asyncio.Semaphore(3)
+
+        async def fetch_endpoint(index: int, item: dict):
+            endpoint_path = item["endpoint"]
+            async with sem:
+                try:
+                    ep_resp = await client.get(
+                        url=f"{GBIZ_BASE_URL}/{corp_num}{endpoint_path}?metadata_flg=false",
+                        headers=headers,
+                    )
+                    ep_body = (
+                        ep_resp.json()
+                        if ep_resp.status_code == 200
+                        else {"hojin-infos": []}
+                    )
+                except Exception:
+                    # 通信エラー時は空のデータを渡してフォールバック
+                    ep_body = {"hojin-infos": []}
+
+                # 整形結果を正しいインデックスに格納
+                sections[index] = format_section(ep_body, item)
+                # 次のリクエストとの間隔をわずかに空ける（負荷軽減用）
+                await asyncio.sleep(0.1)
+
+        # 全エンドポイントのタスクを生成して一斉に実行
+        tasks = [fetch_endpoint(i, item) for i, item in enumerate(endpoints)]
+        await asyncio.gather(*tasks)
+
+    # --- 出力テキスト整形 ---
+    markdown = build_full_markdown(
+        corp_name=resolved_name,
+        corp_num=corp_num,
+        corp_location=corp_location,
+        sections=sections,
+    )
+    gbiz_url = f"https://info.gbiz.go.jp/hojin/ichiran?hojinBango={corp_num}"
+
+    return SearchResponse(
+        status="success",
+        markdown=markdown,
+        corporate_number=corp_num,
+        corp_name=resolved_name,
+        corp_location=corp_location,
+        url=gbiz_url,
+    )
+</file>
+
 <file path="app/globals.css">
+/* app/globals.css */
+
 @import "tailwindcss";
 @tailwind utilities;
 
@@ -920,6 +1472,8 @@ body {
 </file>
 
 <file path="app/layout.tsx">
+// app/layout.tsx
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -957,43 +1511,40 @@ export default function RootLayout({
 </file>
 
 <file path="app/page.tsx">
+// app/page.tsx
+
 "use client";
 
-import { useState, useRef } from "react";
-import ReactMarkdown from "react-markdown";
+import "@/styles/markdown_style.css"; // Markdown用のスタイル
 
-type Candidate = {
-    name: string;
-    location: string;
-    corporate_number: string;
-};
+import { AlertCircle, AlertTriangle, Building, Loader2 } from "lucide-react"; // アイコン
+import { useRef, useState } from "react";
 
-type SearchResponse = {
-    status: "success" | "multiple" | "not_found";
-    markdown?: string;
-    corporate_number?: string;
-    corp_name?: string;
-    corp_location?: string;
-    url?: string;
-    message?: string;
-    candidates?: Candidate[];
-};
+import CandidateList from "@/components/CandidateList"; // 検索結果（複数）表示コンポーネント
+import ResultView from "@/components/ResultView"; // 検索結果（単体）表示コンポーネント
+import SearchForm from "@/components/SearchForm"; // 検索フォームコンポーネント
+import { Candidate, SearchResponse } from "@/types"; // 型定義
 
 export default function CorporateSearchPage() {
+
+    // State管理
     const [corpName, setCorpName] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [result, setResult] = useState<SearchResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // スクロール管理＆検索ボタンフォーカス
     const inputRef = useRef<HTMLInputElement>(null);
     const resultRef = useRef<HTMLDivElement>(null);
 
+    // 検索ハンドラ
     const handleSearch = async (nameOverride?: string) => {
         const name = nameOverride ?? corpName;
         if (!name.trim()) return;
 
         setIsLoading(true);
         setError(null);
-        setResult(null);
+        setResult(null); // 前回の結果をクリア
 
         try {
             const res = await fetch("/api/py/search/corp", {
@@ -1013,18 +1564,25 @@ export default function CorporateSearchPage() {
             setTimeout(() => {
                 resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
             }, 100);
-        } catch (e: any) {
-            setError(e.message ?? "予期しないエラーが発生しました");
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                setError(e.message);
+            } else {
+                setError("予期しないエラーが発生しました");
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
+    // 候補選択時のハンドラ
     const handleSelectCandidate = (candidate: Candidate) => {
+        // 企業名をフォームに入力して検索を実行する
         setCorpName(candidate.name);
         handleSearch(candidate.name);
     };
 
+    // リセット処理
     const handleReset = () => {
         setCorpName("");
         setResult(null);
@@ -1032,32 +1590,13 @@ export default function CorporateSearchPage() {
         inputRef.current?.focus();
     };
 
-    const handleDownload = () => {
-        if (!result?.markdown) return;
-        const blob = new Blob([result.markdown], { type: "text/markdown" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${result.corp_name ?? corpName}_企業情報.md`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
-
-    const handleCopy = () => {
-        if (result?.markdown) navigator.clipboard.writeText(result.markdown);
-    };
-
     return (
-        <div className="min-h-screen bg-slate-50 font-sans">
+        <div className="min-h-screen font-sans">
             {/* ヘッダー */}
             <header className="bg-white border-b border-slate-200 px-6 py-4">
                 <div className="max-w-3xl mx-auto flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+                        <Building className="text-white" size={20} />
                     </div>
                     <div>
                         <h1 className="text-base font-semibold text-slate-800">企業情報検索</h1>
@@ -1067,73 +1606,30 @@ export default function CorporateSearchPage() {
             </header>
 
             <main className="max-w-3xl mx-auto px-6 py-10 space-y-8">
-
                 {/* 検索フォーム */}
-                <section className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                        企業名
-                        <span className="ml-1 text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-3">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={corpName}
-                            onChange={(e) => setCorpName(e.target.value)}
-                            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                            placeholder="例: 株式会社良品計画"
-                            className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-sm
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                            placeholder:text-slate-400 transition"
-                        />
-                        <button
-                            onClick={() => handleSearch()}
-                            disabled={isLoading || !corpName.trim()}
-                            className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg
-                            hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed
-                            transition flex items-center gap-2 shrink-0"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                                    </svg>
-                                    検索中
-                                </>
-                            ) : (
-                                <>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
-                                    </svg>
-                                    検索
-                                </>
-                            )}
-                        </button>
-                    </div>
-                    <p className="mt-2 text-xs text-slate-400">
-                        同名企業が複数ある場合は候補一覧から選択してください
-                    </p>
-                </section>
+                <SearchForm
+                    corpName={corpName}
+                    setCorpName={setCorpName}
+                    onSearch={() => handleSearch()}
+                    isLoading={isLoading}
+                    inputRef={inputRef}
+                />
 
-                {/* ローディング表示 */}
+                {/* 検索中ローディング */}
                 {isLoading && (
                     <div className="bg-white rounded-xl border border-slate-200 p-10 text-center">
-                        <svg className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                        </svg>
+                        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-3" />
                         <p className="text-sm text-slate-500">gBizINFO から情報を取得しています...</p>
-                        <p className="text-xs text-slate-400 mt-1">複数のエンドポイントを順次取得するため、しばらくお待ちください</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                            複数のエンドポイントを順次取得するため、しばらくお待ちください
+                        </p>
                     </div>
                 )}
 
                 {/* エラー表示 */}
                 {!isLoading && error && (
                     <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex gap-3">
-                        <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12A9 9 0 113 12a9 9 0 0118 0z" />
-                        </svg>
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                         <div>
                             <p className="text-sm font-medium text-red-700">エラーが発生しました</p>
                             <p className="text-sm text-red-600 mt-0.5">{error}</p>
@@ -1144,173 +1640,34 @@ export default function CorporateSearchPage() {
                 {/* 見つからなかった場合 */}
                 {!isLoading && result?.status === "not_found" && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex gap-3">
-                        <svg className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12A9 9 0 113 12a9 9 0 0118 0z" />
-                        </svg>
+                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                         <p className="text-sm text-amber-700">{result.message}</p>
                     </div>
                 )}
 
-                {/* 複数候補 */}
-                {!isLoading && result?.status === "multiple" && result.candidates && (
-                    <section ref={resultRef}>
-                        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start">
-                            <svg className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12A9 9 0 113 12a9 9 0 0118 0z" />
-                            </svg>
-                            <p className="text-sm text-amber-800">{result.message}</p>
-                        </div>
-                        <div className="grid sm:grid-cols-2 gap-3">
-                            {result.candidates.map((c) => (
-                                <button
-                                    key={c.corporate_number}
-                                    onClick={() => handleSelectCandidate(c)}
-                                    className="bg-white border border-slate-200 rounded-xl p-5 text-left
-                                hover:border-blue-400 hover:shadow-md transition-all group"
-                                >
-                                    <p className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors text-sm mb-2">
-                                        {c.name}
-                                    </p>
-                                    <p className="text-xs text-slate-500 flex items-start gap-1 mb-1">
-                                        <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        {c.location}
-                                    </p>
-                                    <p className="text-xs text-slate-400 font-mono">法人番号: {c.corporate_number}</p>
-                                    <div className="mt-3 flex justify-end">
-                                        <span className="text-xs font-medium text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                                            この企業で検索
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </span>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-                )}
+                <div ref={resultRef}>
+                    {/* 複数候補表示 */}
+                    {!isLoading && result?.status === "multiple" && result.candidates && (
+                        <CandidateList
+                            message={result.message!}
+                            candidates={result.candidates}
+                            onSelect={handleSelectCandidate} // 再検索関数を渡す
+                        />
+                    )}
 
-                {/* 検索成功 - Markdown表示 */}
-                {!isLoading && result?.status === "success" && result.markdown && (
-                    <section ref={resultRef} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        {/* ツールバー */}
-                        <div className="border-b border-slate-200 bg-slate-50 px-5 py-3 flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2 text-xs text-slate-500 font-mono min-w-0">
-                                <span className="truncate">法人番号: {result.corporate_number}</span>
-                            </div>
-                            <div className="flex gap-2 shrink-0">
-                                <button
-                                    onClick={handleCopy}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md
-                                border border-slate-200 bg-white text-slate-600
-                                hover:bg-slate-50 transition"
-                                >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                    コピー
-                                </button>
-                                <button
-                                    onClick={handleDownload}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md
-                                border border-slate-200 bg-white text-slate-600
-                                hover:bg-slate-50 transition"
-                                >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    ダウンロード
-                                </button>
-                                {result.url && (
-                                    <a
-                                        href={result.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md
-                                border border-slate-200 bg-white text-blue-600
-                                hover:bg-blue-50 transition"
-                                    >
-                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                        gBizINFO
-                                    </a>
-                                )}
-                                <button
-                                    onClick={handleReset}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md
-                                border border-slate-200 bg-white text-slate-500
-                                hover:bg-slate-50 transition"
-                                >
-                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                    </svg>
-                                    リセット
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Markdown本文 */}
-                        <div className="p-8 prose prose-sm prose-slate max-w-none
-                            prose-headings:font-semibold
-                            prose-h1:text-xl prose-h1:mb-4
-                            prose-h2:text-base prose-h2:mt-6 prose-h2:mb-3
-                            prose-h3:text-sm prose-h3:mt-5 prose-h3:mb-2
-                            prose-li:text-sm prose-li:my-0.5
-                            prose-code:text-xs prose-code:bg-slate-100 prose-code:px-1 prose-code:rounded
-                            prose-hr:border-slate-200">
-                            <ReactMarkdown>{result.markdown}</ReactMarkdown>
-                        </div>
-                    </section>
-                )}
+                    {/* 検索結果表示 */}
+                    {!isLoading && result?.status === "success" && (
+                        <ResultView
+                            result={result}
+                            corpName={corpName}
+                            onReset={handleReset} // リセット関数を渡す
+                        />
+                    )}
+                </div>
             </main>
         </div>
     );
 }
-</file>
-
-<file path="eslint.config.mjs">
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
-</file>
-
-<file path="next.config.ts">
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-    rewrites: async () => {
-        return [
-            {
-                source: "/api/py/:path*",
-                destination:
-                    process.env.NODE_ENV === "development"
-                        ? "http://127.0.0.1:8000/api/py/:path*"
-                        : "/api/",
-            },
-        ];
-    },
-};
-
-export default nextConfig;
 </file>
 
 <file path="package.json">
@@ -1327,10 +1684,12 @@ export default nextConfig;
     "lint": "eslint"
   },
   "dependencies": {
+    "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "remark-breaks": "^4.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -1346,54 +1705,156 @@ export default nextConfig;
 }
 </file>
 
-<file path="postcss.config.mjs">
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+    rewrites: async () => {
+        return [
+            {
+                source: "/api/py/:path*",
+                destination:
+                    process.env.NODE_ENV === "development"
+                        ? "http://127.0.0.1:8000/api/py/:path*" // ローカル
+                        : "/api/", // 本番（サーバーレス関数）
+            },
+        ];
+    },
 };
 
-export default config;
-</file>
+export default nextConfig;
 
-<file path="public/file.svg">
-<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
-</file>
-
-<file path="public/globe.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
-</file>
-
-<file path="public/next.svg">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
-</file>
-
-<file path="public/vercel.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
-</file>
-
-<file path="public/window.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
+// ポイント
+// destination の本番側が /api/ （末尾スラッシュあり）になっている点に注意。
+// Vercel が api/index.py をサーバーレス関数として /api/ にマウントするため。
 </file>
 
 <file path="README.md">
-## セットアップ手順
+# gBizINFO 企業情報検索
 
-**1. 環境変数の設定**
+gBizINFO API から法人情報を取得し、日本語 Markdown として出力するWebアプリです。  
+取得した情報を LLM に渡すことで、企業分析への活用を目的としています。
+
+[アプリへのリンク（Vercel）](https://gbiz-corp-search.vercel.app/)
+
+## 概要
+
+企業名を入力すると、gBizINFO API の複数エンドポイントから情報を取得し、読みやすい日本語 Markdown 形式で表示します。出力結果はコピーまたはファイルダウンロードが可能です。
+
+**取得できる情報**
+
+| カテゴリ       | 内容                                          |
+| -------------- | --------------------------------------------- |
+| 法人基本情報   | 法人名・所在地・従業員数・代表者名・資本金 等 |
+| 財務情報       | 売上高・純利益・総資産・大株主 等             |
+| 特許情報       | 特許・意匠・商標の登録情報                    |
+| 補助金情報     | 補助金交付の実績                              |
+| 調達情報       | 政府調達の受注実績                            |
+| 届出・認定情報 | 各府省による認定・届出                        |
+| 表彰情報       | 各府省による表彰実績                          |
+| 事業所情報     | 事業所名・所在地 等                           |
+| 職場情報       | 平均年齢・育児休業取得率・女性活躍推進情報 等 |
+
+## 実装のポイント
+
+### 日本語キーマップによる変換
+
+gBizINFO API のレスポンスは英語のキー名で返されます。本アプリでは、英語キーを日本語に変換するマッピングテーブル（`api/gbiz/keymap.py`）を独自に定義し、出力を日本語 Markdown に変換しています。
+
+このマッピングは **gBizINFO 公式の Swagger UI 記載の定義に準拠**して作成しています。英語キーのまま LLM に渡すと解釈がブレるケースがあるため、公式定義に沿った日本語に変換することで、LLM による企業分析の精度向上を図っています。
+
+```python
+# 例: api/gbiz/keymap.py
+basic_map = {
+    "corporate_number": "法人番号",
+    "net_sales_summary_of_business_results": "売上高",
+    "representative_name": "法人代表者名",
+    ...
+}
+```
+
+### 最新バージョンに対応
+
+2026年1月26日にリニューアルしたAPIの仕様に対応しています。
+
+REST API （v1）--> REST API （v2）
+
+## 技術スタック
+
+| レイヤー       | 技術                                                |
+| -------------- | --------------------------------------------------- |
+| フロントエンド | Next.js 16 (App Router) / TypeScript / Tailwind CSS |
+| バックエンド   | FastAPI / Python                                    |
+| Markdown 表示  | react-markdown                                      |
+| デプロイ       | Vercel（単一プロジェクト）                          |
+
+## ディレクトリ構成
+
+```
+.
+├── api/                    # FastAPI アプリ
+│   ├── index.py            # エントリポイント・APIエンドポイント定義
+│   └── gbiz/
+│       ├── keymap.py       # 英語→日本語 キーマッピング
+│       ├── endpoints.py    # gBizINFO エンドポイント定義
+│       └── formatter.py    # Markdown 整形ロジック
+│
+├── app/                    # Next.js App Router
+│   ├── layout.tsx
+│   ├── page.tsx            # 企業検索ページ
+│   └── globals.css
+│
+├── next.config.ts          # /api/py/* → FastAPI へのリワイト設定
+├── requirements.txt        # Python 依存パッケージ
+└── .env.local.example      # 環境変数テンプレート
+```
+
+## セットアップ
+
+### 前提条件
+
+- Node.js 18 以上
+- Python 3.11 以上
+- gBizINFO API トークン（[gBizINFO 各種利用申請画面](https://info.gbiz.go.jp/hojin/various_registration/form)より取得）
+
+### ローカル起動
+
 ```bash
+# 1. リポジトリのクローン
+git clone <repository-url>
+cd <repository-name>
+
+# 2. 環境変数の設定
 cp .env.local.example .env.local
-# .env.local に GBIZ_API_TOKEN=実際のトークン を記入
-```
+# .env.local を編集して GBIZ_API_TOKEN を記入
 
-**2. ローカル起動**
-```bash
+# 3. Python 仮想環境の作成
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+# 4. Node.js パッケージのインストール
 npm install
-npm run dev   # Next.js と FastAPI を同時起動
+
+# 5. 開発サーバーの起動
+npm run dev
 ```
 
-**3. Vercel へのデプロイ**
-Vercel ダッシュボードの Environment Variables に `GBIZ_API_TOKEN` を追加してから push する。
+`http://localhost:3000` でアプリが起動します。
 
+### Vercel へのデプロイ
+
+1. GitHub リポジトリを Vercel に接続
+2. Vercel ダッシュボード → Settings → Environment Variables に `GBIZ_API_TOKEN` を追加
+3. `main` ブランチへ push
+
+## 参考
+
+- [gBizINFO 経済産業省](https://info.gbiz.go.jp/hojin/Top)
+- [gBizINFO API](https://content.info.gbiz.go.jp/api/index.html)
+- [国税庁 法人番号公表サイト](https://www.houjin-bangou.nta.go.jp/)
+
+## ディレクトリ構造
 
 ```
 gbiz-corp-search
@@ -1413,7 +1874,6 @@ gbiz-corp-search
 ├─ next.config.ts
 ├─ package-lock.json
 ├─ package.json
-├─ .env.local.example
 ├─ postcss.config.mjs
 ├─ public
 │  ├─ file.svg
@@ -1422,48 +1882,14 @@ gbiz-corp-search
 │  ├─ vercel.svg
 │  └─ window.svg
 ├─ README.md
+├─ repomix-output.xml
 ├─ requirements.txt
-├─ Tailwind.config.js
+├─ styles
+│  └─ markdown_style.css
+├─ tailwind.config.js
 └─ tsconfig.json
 
 ```
-</file>
-
-<file path="tsconfig.json">
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": ["node_modules"]
-}
 </file>
 
 </files>
