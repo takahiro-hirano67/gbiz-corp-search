@@ -25,7 +25,7 @@ gBizINFO API から法人情報を取得し、日本語 Markdown として出力
 
 ## 実装のポイント
 
-### 日本語キーマップによる変換
+### LLMフレンドリーなデータ変換＆日本語キーマップによる変換
 
 gBizINFO API のレスポンスは英語のキー名で返されます。本アプリでは、英語キーを日本語に変換するマッピングテーブル（`api/gbiz/keymap.py`）を独自に定義し、出力を日本語 Markdown に変換しています。
 
@@ -46,6 +46,14 @@ basic_map = {
 2026年1月26日にリニューアルしたAPIの仕様に対応しています。
 
 REST API （v1）--> REST API （v2）
+
+### APIの並行処理と負荷制御
+
+外部API（特に政府系）への負荷を考慮した設計。
+
+`api/index.py` にて、gBizINFOの複数エンドポイント(計9種)を叩く際に `asyncio.gather` で並行処理しつつ、
+`asyncio.Semaphore(3)` で同時接続数を制御し、さらに `await asyncio.sleep(0.1)` で間隔を空けている。
+
 
 ## 技術スタック
 
