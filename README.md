@@ -5,6 +5,8 @@ gBizINFO API から法人情報を取得し、日本語 Markdown として出力
 
 [アプリへのリンク（Vercel）](https://gbiz-corp-search.vercel.app/)
 
+<img width="813" height="883" alt="Image" src="https://github.com/user-attachments/assets/e020c384-0cb1-4c3c-9bcf-1e24f582ae28" />
+
 ## 概要
 
 企業名を入力すると、gBizINFO API の複数エンドポイントから情報を取得し、読みやすい日本語 Markdown 形式で表示します。出力結果はコピーまたはファイルダウンロードが可能です。
